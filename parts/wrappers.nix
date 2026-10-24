@@ -1,4 +1,4 @@
-{ self, ... }:
+{ inputs, ... }:
 {
-  flake.wrappers.tmux = self + /config;
+  flake.wrappers.tmux = inputs.import-tree ../config;
 }
