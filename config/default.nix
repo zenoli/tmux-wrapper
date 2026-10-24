@@ -1,6 +1,11 @@
-{ pkgs, wlib, ... }:
+{ lib, wlib, ... }:
 {
-  imports = [ wlib.wrapperModules.tmux ];
+  imports = [
+    wlib.wrapperModules.tmux
+  ]
+  # Every entry in ./plugins is a module: either `<name>.nix` or a
+  # `<name>/` directory with a default.nix (plus before.tmux/after.tmux).
+  ++ map (name: ./plugins + "/${name}") (lib.attrNames (builtins.readDir ./plugins));
 
   terminal = "tmux-256color";
   escapeTime = 0;
@@ -11,56 +16,6 @@
   clock24 = true;
   disableConfirmationPrompt = false;
   secureSocket = true;
-  plugins = [
-    {
-      plugin = pkgs.tmuxPlugins.catppuccin;
-      configBefore = ''
-        set -g @catppuccin_flavor 'mocha'
-        # Transparent bar; pills keep their own colours.
-        set -g @catppuccin_status_background 'none'
-        # Status modules default to a square right edge (a plain space);
-        # round it off to match the left cap.
-        set -g @catppuccin_status_right_separator ""
-        # Otherwise the cap keeps the pill's own background and vanishes.
-        set -g @catppuccin_status_connect_separator 'no'
-        # catppuccin's 'rounded' style draws its caps as
-        # fg=<status bg>,reverse, which only works on a solid bar (tmux
-        # rejects fg=none, and reversing the terminal default paints the
-        # terminal's foreground). The documented 'custom' style with the
-        # cap in the pill's colour on the default background works.
-        set -g @catppuccin_window_status_style 'custom'
-        set -g @catppuccin_window_left_separator "#[fg=#{E:@catppuccin_window_text_color},bg=default]"
-        set -g @catppuccin_window_middle_separator ' '
-        set -g @catppuccin_window_right_separator "#[fg=#{E:@catppuccin_window_number_color},bg=default]"
-        set -g @catppuccin_window_current_left_separator "#[fg=#{E:@catppuccin_window_current_text_color},bg=default]"
-        set -g @catppuccin_window_current_right_separator "#[fg=#{E:@catppuccin_window_current_number_color},bg=default]"
-        set -g @catppuccin_window_number_position 'right'
-        # Darkest palette colour for unfocused window names, so the
-        # focused one (surface_1) stands out.
-        set -g @catppuccin_window_text_color '#{@thm_crust}'
-        set -g @catppuccin_window_text ' #W'
-        set -g @catppuccin_window_current_text ' #W#{?window_zoomed_flag, (󰁌),}'
-        set -g @catppuccin_date_time_text ' %H:%M'
-      '';
-      # The status modules are only defined once the plugin has run.
-      configAfter = ''
-        set -g status-position bottom
-        # tmux 3.7 draws prompts/messages on top of the status line and
-        # only clears it with a fill colour, which catppuccin doesn't set;
-        # without it the pills show through the prompt. Left-aligned so
-        # the prompt and its input stay together.
-        set -gF message-style 'fg=#{@thm_teal},bg=default,fill=terminal'
-        set -gF message-command-style 'fg=#{@thm_teal},bg=default,fill=terminal'
-        set -g status-left-length 100
-        set -g status-right-length 100
-        # Trailing space matches the gap between windows
-        # (window-status-separator).
-        set -g status-left '#{E:@catppuccin_status_session} '
-        set -g status-right '#{E:@catppuccin_status_date_time}'
-      '';
-    }
-  ];
-
   configAfter = ''
     # Split windows
     bind-key h split-window -c "#{pane_current_path}"
