@@ -5,7 +5,6 @@
   imports = [ wlib.wrapperModules.tmux ];
 
   terminal = "tmux-256color";
-  escapeTime = 0;
   statusKeys = "vi";
   modeKeys = "vi";
   # Keep the home-manager module's behaviour where the wrapper's defaults
